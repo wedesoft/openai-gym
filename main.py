@@ -1,19 +1,23 @@
 # https://github.com/shivaverma/OpenAIGym/blob/master/lunar-lander/discrete/lunar_lander.py
+import random
 import collections
 import numpy as np
 import keras
 import gym
 
 
-class DQN:
+class Agent:
     def __init__(self, action_space, state_space):
         self.action_space = action_space
         self.state_space = state_space
         self.epsilon = 1.0
         self.epsilon_decay = .995
+        self.epsilon_min = 0.05
+        self.gamma = 0.99
         self.learning_rate = 0.001
+        self.batch_size = 8
         self.model = self.build_model()
-        self.memory = collections.deque(maxlen=100000)
+        self.memory = collections.deque(maxlen=1000000)
 
     def build_model(self):
         # Model taking state as input and outputting the expected reward for each action.
@@ -33,20 +37,47 @@ class DQN:
     def remember(self, *args):
         self.memory.append(args)
 
+    def replay(self, *args):
+        if len(self.memory) < self.batch_size:
+            return
+        minibatch = random.sample(self.memory, self.batch_size)
+        states, actions, rewards, next_states, dones = zip(*minibatch)
+        states = np.array(states)
+        actions = np.array(actions)
+        rewards = np.array(rewards)
+        next_states = np.array(next_states)
+        dones = np.array(dones)
+        # Get estimated maximum reward for next state for each sample.
+        next_reward = np.amax(self.model.predict_on_batch(next_states), axis=-1)
+        # Compute reward for current action for each sample.
+        targets = rewards + self.gamma * next_reward * (1 - dones)
+        # Get current estimated rewards for each action from neural network.
+        current = self.model.predict_on_batch(states)
+        # Update part of the table with new rewards.
+        current[list(range(self.batch_size)), actions] = targets
+        # Perform training step with updated table.
+        self.model.fit(states, current, epochs=1, verbose=0)
+        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+
 
 env = gym.make('LunarLander-v2')
-agent = DQN(env.action_space, env.observation_space)
-for e in range(3):
+agent = Agent(env.action_space, env.observation_space)
+episodes = 100000
+max_steps = 1000 # need to fly long enough for fuel penalty to overcome penalty for crashing
+for e in range(episodes):
+    print('Episode =', e)
     done = False
     score = 0
     state = env.reset()
-    for i in range(100):
+    for i in range(max_steps):
         env.render()
         old_state = state
         action = agent.act(state)
         state, reward, done, _ = env.step(action)
         score += reward
         agent.remember(old_state, action, reward, state, done)
+        agent.replay()
         if done:
             break
+    print('score =', score, 'last reward =', reward)
 env.close()
