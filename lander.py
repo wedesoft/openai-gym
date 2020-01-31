@@ -4,11 +4,9 @@ import pickle
 import random
 import collections
 import ruamel.yaml as yaml
-import warnings
 import numpy as np
 import keras
 import gym
-warnings.simplefilter('ignore', yaml.error.UnsafeLoaderWarning)
 
 
 class Agent:
@@ -34,7 +32,7 @@ class Agent:
         if not os.path.exists(self.conf_file):
             return
         with open(self.conf_file) as f:
-            config = yaml.load(f)
+            config = yaml.safe_load(f)
             self.epsilon = config['epsilon']
 
     def load_memory(self):
