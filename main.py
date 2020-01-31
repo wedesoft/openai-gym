@@ -1,10 +1,14 @@
 import gym
 env = gym.make('LunarLander-v2')
-for e in range(10):
+for e in range(3):
     done = False
+    score = 0
     state = env.reset()
-    while not done:
+    for i in range(100):
         env.render()
         action = env.action_space.sample()
         state, reward, done, _ = env.step(action)
+        score += reward
+        if done:
+            break
 env.close()
