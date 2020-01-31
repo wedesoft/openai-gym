@@ -96,7 +96,7 @@ agent = Agent(env.action_space, env.observation_space)
 episodes = 100
 max_steps = 3000 # need to fly long enough for fuel penalty to overcome penalty for crashing
 for e in range(episodes):
-    print('Episode =', e)
+    print('Episode =', e + 1)
     done = False
     score = 0
     state = env.reset()
