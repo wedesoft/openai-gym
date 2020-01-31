@@ -3,9 +3,11 @@ import os
 import random
 import collections
 import ruamel.yaml as yaml
+import warnings
 import numpy as np
 import keras
 import gym
+warnings.simplefilter('ignore', yaml.error.UnsafeLoaderWarning)
 
 
 class Agent:
@@ -17,12 +19,15 @@ class Agent:
         self.epsilon_min = 0.05
         self.gamma = 0.99
         self.learning_rate = 0.001
-        self.batch_size = 8
-        self.weights_file = 'lander.h5'
-        self.conf_file = 'lander.yml'
-        self.load_config()
-        self.model = self.build_model()
+        self.batch_size = 64
         self.memory = collections.deque(maxlen=1000000)
+        self.weights_file = 'lander.h5'
+        self.conf_file = 'config.yml'
+        self.memory_file = 'memory.yml'
+        self.load_config()
+        self.load_memory()
+        self.load_memory()
+        self.model = self.build_model()
 
     def load_config(self):
         if not os.path.exists(self.conf_file):
@@ -30,6 +35,12 @@ class Agent:
         with open(self.conf_file) as f:
             config = yaml.load(f)
             self.epsilon = config['epsilon']
+
+    def load_memory(self):
+        if not os.path.exists(self.memory_file):
+            return
+        with open(self.memory_file) as f:
+            self.memory = yaml.load(f)
 
     def build_model(self):
         # Model taking state as input and outputting the expected reward for each action.
@@ -77,7 +88,8 @@ class Agent:
         self.model.save_weights(self.weights_file)
         with open(self.conf_file, 'w') as f:
             yaml.dump({'epsilon': self.epsilon}, f)
-
+        with open(self.memory_file, 'w') as f:
+            yaml.dump(self.memory, f)
 
 
 env = gym.make('LunarLander-v2')
