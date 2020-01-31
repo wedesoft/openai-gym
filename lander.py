@@ -1,4 +1,4 @@
-# https://github.com/shivaverma/OpenAIGym/blob/master/lunar-lander/discrete/lunar_lander.py
+# https://github.com/shivaverma/OpenAIGym/
 import os
 import pickle
 import random
