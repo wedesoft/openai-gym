@@ -1,5 +1,6 @@
 # https://github.com/shivaverma/OpenAIGym/blob/master/lunar-lander/discrete/lunar_lander.py
 import os
+import pickle
 import random
 import collections
 import ruamel.yaml as yaml
@@ -23,7 +24,7 @@ class Agent:
         self.memory = collections.deque(maxlen=1000000)
         self.weights_file = 'lander.h5'
         self.conf_file = 'config.yml'
-        self.memory_file = 'memory.yml'
+        self.memory_file = 'memory.pickle'
         self.load_config()
         self.load_memory()
         self.load_memory()
@@ -39,8 +40,8 @@ class Agent:
     def load_memory(self):
         if not os.path.exists(self.memory_file):
             return
-        with open(self.memory_file) as f:
-            self.memory = yaml.load(f)
+        with open(self.memory_file, 'rb') as f:
+            self.memory = pickle.load(f)
 
     def build_model(self):
         # Model taking state as input and outputting the expected reward for each action.
@@ -88,13 +89,13 @@ class Agent:
         self.model.save_weights(self.weights_file)
         with open(self.conf_file, 'w') as f:
             yaml.dump({'epsilon': self.epsilon}, f)
-        with open(self.memory_file, 'w') as f:
-            yaml.dump(self.memory, f)
+        with open(self.memory_file, 'wb') as f:
+            pickle.dump(self.memory, f)
 
 
 env = gym.make('LunarLander-v2')
 agent = Agent(env.action_space, env.observation_space)
-episodes = 1000
+episodes = 1
 max_steps = 1000 # need to fly long enough for fuel penalty to overcome penalty for crashing
 for e in range(episodes):
     print('Episode =', e)
