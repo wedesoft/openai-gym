@@ -1,6 +1,8 @@
 # https://github.com/shivaverma/OpenAIGym/blob/master/lunar-lander/discrete/lunar_lander.py
+import os
 import random
 import collections
+import ruamel.yaml as yaml
 import numpy as np
 import keras
 import gym
@@ -16,8 +18,18 @@ class Agent:
         self.gamma = 0.99
         self.learning_rate = 0.001
         self.batch_size = 8
+        self.weights_file = 'lander.h5'
+        self.conf_file = 'lander.yml'
+        self.load_config()
         self.model = self.build_model()
         self.memory = collections.deque(maxlen=1000000)
+
+    def load_config(self):
+        if not os.path.exists(self.conf_file):
+            return
+        with open(self.conf_file) as f:
+            config = yaml.load(f)
+            self.epsilon = config['epsilon']
 
     def build_model(self):
         # Model taking state as input and outputting the expected reward for each action.
@@ -26,6 +38,8 @@ class Agent:
         model.add(keras.layers.Dense(120, activation=keras.activations.relu))
         model.add(keras.layers.Dense(self.action_space.n, activation=keras.activations.linear))
         model.compile(loss='mse', optimizer=keras.optimizers.adam(lr=self.learning_rate))
+        if os.path.exists(self.weights_file):
+            model.load_weights(self.weights_file)
         return model
 
     def act(self, state):
@@ -59,10 +73,16 @@ class Agent:
         self.model.fit(states, current, epochs=1, verbose=0)
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
+    def save(self):
+        self.model.save_weights(self.weights_file)
+        with open(self.conf_file, 'w') as f:
+            yaml.dump({'epsilon': self.epsilon}, f)
+
+
 
 env = gym.make('LunarLander-v2')
 agent = Agent(env.action_space, env.observation_space)
-episodes = 100000
+episodes = 1000
 max_steps = 1000 # need to fly long enough for fuel penalty to overcome penalty for crashing
 for e in range(episodes):
     print('Episode =', e)
@@ -81,3 +101,4 @@ for e in range(episodes):
             break
     print('score =', score, 'last reward =', reward)
 env.close()
+agent.save()
