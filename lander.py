@@ -15,7 +15,7 @@ class Agent:
         self.state_space = state_space
         self.epsilon = 1.0
         self.epsilon_decay = .995
-        self.epsilon_min = 0.05
+        self.epsilon_min = 0.01
         self.gamma = 0.99
         self.learning_rate = 0.001
         self.batch_size = 64
