@@ -95,8 +95,8 @@ class Agent:
 
 env = gym.make('LunarLander-v2')
 agent = Agent(env.action_space, env.observation_space)
-episodes = 1
-max_steps = 1000 # need to fly long enough for fuel penalty to overcome penalty for crashing
+episodes = 100
+max_steps = 3000 # need to fly long enough for fuel penalty to overcome penalty for crashing
 for e in range(episodes):
     print('Episode =', e)
     done = False
