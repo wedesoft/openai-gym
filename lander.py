@@ -26,7 +26,6 @@ class Agent:
         self.memory_file = 'memory.pickle'
         self.load_config()
         self.load_memory()
-        self.load_memory()
         self.model = self.build_model()
 
     def load_config(self):
